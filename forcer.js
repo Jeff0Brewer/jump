@@ -119,9 +119,9 @@ class SpringForcer{
 			vel_diff = APRX_0.slice();
 		let d = mag(pos_diff) - this.len;
 		let dir = vec3.normalize([0,0,0], pos_diff);
-		vec3.scale(vel_diff, dir, vec3.dot([0,0,0], vel_diff, dir));
+		vec3.scale(vel_diff, dir, vec3.dot(vel_diff, dir));
 
-		let f = vec3.scale([0,0,0], dir, this.str*Math.pow(d, 2)*Math.sign(d) - (vec3.dot([0,0,0], vel_diff, dir) > 0 ? -1 : 1)*mag(vel_diff)*this.dmp);
+		let f = vec3.scale([0,0,0], dir, this.str*Math.pow(d, 2)*Math.sign(d) - (vec3.dot(vel_diff, dir) > 0 ? -1 : 1)*mag(vel_diff)*this.dmp);
 		for(let i = 0; i < this.inds.length; i++){
 			for(let j = 0; j < f.length; j++){
 				s[this.inds[i]*IND.FPP + IND.FOR + j] += (i == 0 ? -1 : 1)*f[j];

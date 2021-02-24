@@ -56,10 +56,10 @@ class SphereConstraint{
 		for(let n = 0; n < this.num; n++){
 			let p2 = s2.slice(n*IND.FPP + IND.POS, n*IND.FPP + IND.POS + 3);
 			let v2 = s2.slice(n*IND.FPP + IND.VEL, n*IND.FPP + IND.VEL + 3);
-			if(dist(p2, this.c) < this.r && vec3.dot([0,0,0], vec3.subtract([0,0,0], p2, this.c), v2) < 0){
+			if(dist(p2, this.c) < this.r && vec3.dot(vec3.subtract([0,0,0], p2, this.c), v2) < 0){
 				let v2 = s2.slice(n*IND.FPP + IND.VEL, n*IND.FPP + IND.VEL + 3);
 				let dir = vec3.normalize([0,0,0], vec3.subtract([0,0,0], p2, this.c));
-				let v_perp = vec3.scale([0,0,0], dir, vec3.dot([0,0,0], v2, dir));
+				let v_perp = vec3.scale([0,0,0], dir, vec3.dot(v2, dir));
 				vec3.scaleAndAdd(v2, vec3.subtract([0,0,0], v2, v_perp), v_perp, this.coeff);
 				vec3.scaleAndAdd(p2, this.c, dir, this.r);
 				for(let i = 0; i < 3; i++){
@@ -136,9 +136,9 @@ class WallConstraint{
 			if(dist_point_plane(p1, this.constants) >= 0 && dist_point_plane(p2, this.constants) < 0){
 				let p = vec3.scaleAndAdd([0,0,0], p1, this.n, dist_point_plane(p1, this.constants));
 				let p_rel = vec3.subtract([0,0,0], p, this.p);
-				if(Math.abs(vec3.dot([0,0,0], p_rel, this.dir.x)) <= this.w && Math.abs(vec3.dot([0,0,0], p_rel, this.dir.y)) <= this.h){
+				if(Math.abs(vec3.dot(p_rel, this.dir.x)) <= this.w && Math.abs(vec3.dot(p_rel, this.dir.y)) <= this.h){
 					let v = s2.slice(n*IND.FPP + IND.VEL, n*IND.FPP + IND.VEL + 3);
-					let v_perp = vec3.scale([0,0,0], this.n, vec3.dot([0,0,0], v, this.n));
+					let v_perp = vec3.scale([0,0,0], this.n, vec3.dot(v, this.n));
 					vec3.scaleAndAdd(v, vec3.subtract([0,0,0], v, v_perp), v_perp, this.coeff);
 					for(let i = 0; i < 3; i++){
 						s2[n*IND.FPP + IND.POS + i] = p[i];
