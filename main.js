@@ -86,9 +86,45 @@ function main(){
 		init: fire_init
 	}
 
-	cam = new CameraController([-5, -5, 3], [0, 0, 0], .8, .01);
+	let player_num = 1;
+	let player_bound = 30;
+	let player_pos = [1, 1, 5];
+	let player_sys = {
+		num: player_num,
+		F: [
+			new SingleForcer([0, 0, 0], 0),
+			new GravityForcer(-9.8, player_num),
+			new DragForcer(.01, player_num)
+		],
+		C: [
+			new AxisConstraint(0, -1, -player_bound, .95, player_num),
+			new AxisConstraint(0, 1, player_bound, .95, player_num),
+			new AxisConstraint(1, -1, -player_bound, .95, player_num),
+			new AxisConstraint(1, 1, player_bound, .95, player_num),
+			new AxisConstraint(2, -1, 0, .95, player_num),
+			new AxisConstraint(2, 1, 2*player_bound, .95, player_num)
+		],
+		init: function(){
+			let p = player_pos;
+			let v = [0, 0, 0];
+			let f = [0, 0, 0];
+			let m = 50;
+			let s = 0;
+			let l = 0;
+			let c = [0, 0, 0, 1];
+			return p.concat(v, f, m, s, l, c);
+		}
+	}
 
+	cam = new CameraController(player_pos, [0, 0, 0], .8);
+
+
+	let SYS_IND = {
+		PLAYER: 0,
+		FIRE: 1
+	}
 	part_sys = [
+		new PartSys(player_sys.num, player_sys.F, player_sys.C, player_sys.init),
 		new PartSys(fire_sys.num, fire_sys.F, fire_sys.C, fire_sys.init)
 	];
 	for(let i = 0; i < part_sys.length; i++){
@@ -96,7 +132,8 @@ function main(){
 	}
 
 	drawers = [
-		new Drawer([3, 0, 0], [part_sys[0].num, part_sys[0].FC_num.tri, part_sys[0].FC_num.lin], [gl.POINTS, gl.TRIANGLES, gl.LINES]),
+		new Drawer([1, 0, 0], [part_sys[0].num, part_sys[0].FC_num.tri, part_sys[0].FC_num.lin], [gl.POINTS, gl.TRIANGLES, gl.LINES]),
+		new Drawer([3, 0, 0], [part_sys[1].num, part_sys[1].FC_num.tri, part_sys[1].FC_num.lin], [gl.POINTS, gl.TRIANGLES, gl.LINES]),
 		new Drawer([0], [grid.length/FPV], [gl.TRIANGLES])
 	];
 	drawers[drawers.length - 1].buffer_data(0, new Float32Array(grid));
@@ -104,7 +141,6 @@ function main(){
 	model_matrix = new Matrix4();
 	view_matrix = new Matrix4();
 	proj_matrix = new Matrix4();
-	view_matrix.setLookAt(cam.pos[0], cam.pos[1], cam.pos[2], cam.foc[0], cam.foc[1], cam.foc[2], 0, 0, 1);
 	proj_matrix.setPerspective(fovy, c.width/c.height, .01, 500);
 	
 	u_ModelMatrix = [];
@@ -124,6 +160,11 @@ function main(){
 
 	let timestep = 1000/60;
 	var tick = function(){
+		
+		let strafe_force = cam.strafe(timestep);
+		if(strafe_force != undefined){
+			part_sys[SYS_IND.PLAYER].F[0].set_force(strafe_force);
+		}
 		if(!paused){
 			for(let i = 0; i < part_sys.length; i++){
 				part_sys[i].applyAllForces(part_sys[i].s1, part_sys[i].F);
@@ -134,8 +175,14 @@ function main(){
 			}
 		}
 
-		cam.strafe(timestep);
-		view_matrix.setLookAt(cam.pos[0], cam.pos[1], cam.pos[2], cam.foc[0], cam.foc[1], cam.foc[2], 0, 0, 1);
+		view_matrix.setLookAt(
+			cam.pos[0] + part_sys[SYS_IND.PLAYER].s2[0], 
+			cam.pos[1] + part_sys[SYS_IND.PLAYER].s2[1], 
+			cam.pos[2] + part_sys[SYS_IND.PLAYER].s2[2], 
+			cam.foc[0] + part_sys[SYS_IND.PLAYER].s2[0], 
+			cam.foc[1] + part_sys[SYS_IND.PLAYER].s2[1], 
+			cam.foc[2] + part_sys[SYS_IND.PLAYER].s2[2], 
+			0, 0, 1);
 		for(let i = 0; i < mvp_shaders.length; i++){
 			switch_shader(mvp_shaders[i]);
 			gl.uniformMatrix4fv(u_ViewMatrix[i], false, view_matrix.elements);

@@ -1,27 +1,25 @@
 class CameraController{
-	constructor(cam, focus, rot_speed, zoom_speed){
+	constructor(cam, focus, rot_speed){
+		this.pos = cam;
+		this.foc = focus;
+		this.r_spd = rot_speed;
 		this.locked = false;
 		this.mouse = {
 			x: 0,
 			y: 0
 		};
-		this.rotation = new Matrix4();
-		this.pos = cam;
-		this.r_spd = rot_speed;
-		this.z_spd = -zoom_speed;
-		this.foc = focus;
 		this.strafe_sign = {
 			lat: 0,
 			for: 0
 		};
+		this.off = [0, 0, 0];
 	}
 
 	strafe(elapsed){
 		if(this.locked){
-			let speed = 10;
-			let d = add(mult_scalar(norm(sub(this.foc.slice(0, 2), this.pos.slice(0, 2))).concat([0]), this.strafe_sign.for*speed*elapsed/1000), mult_scalar(norm(cross3(sub(this.foc, this.pos), [0, 0, 1])), this.strafe_sign.lat*speed*elapsed/1000));
-			this.pos = add(this.pos, d);
-			this.foc = add(this.foc, d);
+			let force = 30000;
+			let d = add(mult_scalar(norm(sub(this.foc.slice(0, 2), this.pos.slice(0, 2))).concat([0]), this.strafe_sign.for*force*elapsed/1000), mult_scalar(norm(cross3(sub(this.foc, this.pos), [0, 0, 1])), this.strafe_sign.lat*force*elapsed/1000));
+			return d;
 		}
 	}
 
@@ -44,13 +42,13 @@ class CameraController{
 			
 			let ax = norm(cross3(dir, [0, 0, 1]));
 
-			this.rotation = new Matrix4();
-			this.rotation.rotate(-dx, 0, 0, 1);
-			this.rotation.rotate(-dy, ax[0], ax[1], ax[2]);
+			let rotation = new Matrix4();
+			rotation.rotate(-dx, 0, 0, 1);
+			rotation.rotate(-dy, ax[0], ax[1], ax[2]);
 
 			let f = new Vector3(dir);
 
-			this.foc = add(this.pos, this.rotation.multiplyVector3(f).elements);
+			this.foc = add(this.pos, rotation.multiplyVector3(f).elements);
 
 			this.mouse.x += e.movementX;
 			this.mouse.y += e.movementY;

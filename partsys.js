@@ -44,7 +44,7 @@ function PartSys(num, F, C, init){
 			this.s2.set(this.s1);
 		}
 		if(!this.curr_solver){
-			this.curr_solver = this.midpoint_i;
+			this.curr_solver = this.velocity_verlet;
 		}
 	}
 

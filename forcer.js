@@ -205,7 +205,7 @@ class AttractionForcer{
 }
 
 class SingleForcer{
-	constructor(particle_ind, force){
+	constructor(force, particle_ind){
 		this.ind = particle_ind;
 		this.f = force;
 
