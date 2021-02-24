@@ -18,7 +18,10 @@ class CameraController{
 	strafe(elapsed){
 		if(this.locked){
 			let force = 30000;
-			let d = add(mult_scalar(norm(sub(this.foc.slice(0, 2), this.pos.slice(0, 2))).concat([0]), this.strafe_sign.for*force*elapsed/1000), mult_scalar(norm(cross3(sub(this.foc, this.pos), [0, 0, 1])), this.strafe_sign.lat*force*elapsed/1000));
+			let d = vec3.add([0,0,0], 
+				vec3.scale([0,0,0], vec2.normalize([0,0], vec3.subtract([0,0,0], this.foc.slice(0, 2), this.pos.slice(0, 2))).concat([0]), this.strafe_sign.for*force*elapsed/1000), 
+				vec3.scale([0,0,0], vec3.normalize([0,0,0], vec3.cross([0,0,0], vec3.subtract([0,0,0], this.foc, this.pos), [0, 0, 1])), this.strafe_sign.lat*force*elapsed/1000)
+			);
 			return d;
 		}
 	}
@@ -37,18 +40,14 @@ class CameraController{
 		if(this.locked){
 			let dx = this.r_spd * e.movementX;
 			let dy = this.r_spd * e.movementY;
-			
-			let dir = sub(this.foc, this.pos);
-			
-			let ax = norm(cross3(dir, [0, 0, 1]));
+			let dir = vec3.subtract([0,0,0], this.foc, this.pos);
+			let ax = vec3.normalize([0,0,0], vec3.cross([0,0,0], dir, [0, 0, 1]));
 
-			let rotation = new Matrix4();
-			rotation.rotate(-dx, 0, 0, 1);
-			rotation.rotate(-dy, ax[0], ax[1], ax[2]);
+			let rotation = mat4.create();
+			mat4.rotate(rotation, mat4.create(), -dx, [0, 0, 1])
+			mat4.rotate(rotation, rotation, -dy, ax)
 
-			let f = new Vector3(dir);
-
-			this.foc = add(this.pos, rotation.multiplyVector3(f).elements);
+			vec3.add(this.foc, this.pos, vec3.transformMat4([0, 0, 0], dir, rotation));
 
 			this.mouse.x += e.movementX;
 			this.mouse.y += e.movementY;

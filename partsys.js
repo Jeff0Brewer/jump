@@ -62,7 +62,7 @@ function PartSys(num, F, C, init){
 	this.dotFinder = function(s){
 		let sdot = new Float32Array(IND.FPP*this.num);
 		for(let n = 0; n < this.num; n++){
-			let acc = mult_scalar(s.slice(n*IND.FPP + IND.FOR, n*IND.FPP + IND.FOR + 3), 1/s[n*IND.FPP + IND.MAS]);
+			let acc = vec3.scale([0,0,0], s.slice(n*IND.FPP + IND.FOR, n*IND.FPP + IND.FOR + 3), 1/s[n*IND.FPP + IND.MAS]);
 			for(let i = 0; i < acc.length; i++){
 				sdot[n*IND.FPP + IND.VEL + i] = acc[i];
 				sdot[n*IND.FPP + IND.POS + i] = s[n*IND.FPP + IND.VEL + i];

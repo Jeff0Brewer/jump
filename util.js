@@ -1,9 +1,9 @@
-//multiply vector by scalar
-function mult_scalar(vec, s){ 
-	let o = vec.slice();
-	for(let i = 0; i < o.length; i++)
-		o[i] = o[i]*s;
-	return o;
+//find magnitude of vector
+function mag(vec){ 
+	let s = 0;
+	for(let i = 0; i < vec.length; i++)
+		s += Math.pow(vec[i], 2);
+	return Math.sqrt(s);
 }
 
 //dist between two vectors
@@ -14,49 +14,12 @@ function dist(a, b){
 	return Math.sqrt(s);
 }
 
-//find magnitude of vector
-function mag(vec){ 
-	let s = 0;
-	for(let i = 0; i < vec.length; i++)
-		s += Math.pow(vec[i], 2);
-	return Math.sqrt(s);
-}
-
-//find normal of vector
-function norm(vec){ 
-	let m = mag(vec);
-	return m != 0 ? mult_scalar(vec, 1/mag(vec)) : [0, 0, 0];
-}
-
-//find sum of two vectors
-function add(a, b){
+//find midpoint of two vectors
+function midpoint(a, b){ 
 	let o = [];
 	for(let i = 0; i < a.length; i++)
-		o.push(a[i]+b[i]);
+		o.push((a[i] + b[i])/2);
 	return o;
-}
-
-//find diff of two vectors
-function sub(a, b){
-	let o = [];
-	for(let i = 0; i < a.length; i++)
-		o.push(a[i]-b[i]);
-	return o;
-}
-
-//find dot product of two vectors
-function dot(a, b){
-	let o = 0;
-	for(let i = 0; i < a.length; i++)
-		o += a[i]*b[i];
-	return o;
-}
-
-//find cross product of 3d vectors
-function cross3(a, b){
-	return [a[1]*b[2] - a[2]*b[1],
-			a[2]*b[0] - a[0]*b[2],
-			a[0]*b[1] - a[1]*b[0]];
 }
 
 // map v from bounds a to bounds b
@@ -75,14 +38,6 @@ function dist_point_line(pt, ln_0, ln_1){
 
 }
 
-//find midpoint of two vectors
-function midpoint(a, b){ 
-	let o = [];
-	for(let i = 0; i < a.length; i++)
-		o.push((a[i] + b[i])/2);
-	return o;
-}
-
 //generate an isosphere with given iterations
 function gen_iso(iter, mode){ 
 	//init base with 20 sides
@@ -96,16 +51,16 @@ function gen_iso(iter, mode){
 			 [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
 			 [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
 	for(let i = 0; i < v.length; i++)
-		v[i] = norm(v[i]);
+		vec3.normalize(v[i], v[i]);
 
 	//iteratively convert every one triangle into 4 and normalize vertices
 	for(let i = 0; i < iter; i++){
 		let n_v = [];
 		let n_t = [];
 		for(let j = 0; j < t.length; j++){
-			let a = norm(midpoint(v[t[j][0]], v[t[j][1]]));
-			let b = norm(midpoint(v[t[j][1]], v[t[j][2]]));
-			let c = norm(midpoint(v[t[j][0]], v[t[j][2]]));
+			let a = vec3.normalize([0,0,0], midpoint(v[t[j][0]], v[t[j][1]]));
+			let b = vec3.normalize([0,0,0], midpoint(v[t[j][1]], v[t[j][2]]));
+			let c = vec3.normalize([0,0,0], midpoint(v[t[j][0]], v[t[j][2]]));
 			let l = n_v.length;
 
 			for(let k = 0; k < 3; k++)

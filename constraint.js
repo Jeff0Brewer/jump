@@ -43,8 +43,7 @@ class SphereConstraint{
 		let lin = [];
 		let color = [1, 1, 1, 1];
 		for(let i = 0; i < iso.length; i++){
-			iso[i] = add(mult_scalar(iso[i], this.r), this.c);
-			lin = lin.concat(iso[i]);
+			lin = lin.concat(vec3.scaleAndAdd([0,0,0], this.c, iso[i], this.r));
 			lin = lin.concat(color);
 			lin.push(0);
 		}
@@ -57,12 +56,12 @@ class SphereConstraint{
 		for(let n = 0; n < this.num; n++){
 			let p2 = s2.slice(n*IND.FPP + IND.POS, n*IND.FPP + IND.POS + 3);
 			let v2 = s2.slice(n*IND.FPP + IND.VEL, n*IND.FPP + IND.VEL + 3);
-			if(dist(p2, this.c) < this.r && dot(sub(p2, this.c), v2) < 0){
+			if(dist(p2, this.c) < this.r && vec3.dot([0,0,0], vec3.subtract([0,0,0], p2, this.c), v2) < 0){
 				let v2 = s2.slice(n*IND.FPP + IND.VEL, n*IND.FPP + IND.VEL + 3);
-				let dir = norm(sub(p2, this.c));
-				let v_perp = mult_scalar(dir, dot(v2, dir));
-				v2 = add(sub(v2, v_perp), mult_scalar(v_perp, this.coeff));
-				p2 = add(mult_scalar(dir, this.r), this.c);
+				let dir = vec3.normalize([0,0,0], vec3.subtract([0,0,0], p2, this.c));
+				let v_perp = vec3.scale([0,0,0], dir, vec3.dot([0,0,0], v2, dir));
+				vec3.scaleAndAdd(v2, vec3.subtract([0,0,0], v2, v_perp), v_perp, this.coeff);
+				vec3.scaleAndAdd(p2, this.c, dir, this.r);
 				for(let i = 0; i < 3; i++){
 					s2[n*IND.FPP + IND.POS + i] = p2[i];
 					s2[n*IND.FPP + IND.VEL + i] = v2[i];
@@ -99,23 +98,23 @@ class FixConstraint{
 
 class WallConstraint{
 	constructor(normal, orientation, center, width, height, coeff, num){
-		this.n = norm(normal);
+		this.n = vec3.normalize([0,0,0], normal);
 		this.dir = {
-			x: norm(orientation),
-			y: norm(cross3(normal, orientation))
+			x: vec3.normalize([0,0,0], orientation),
+			y: vec3.normalize([0,0,0], vec3.cross([0,0,0], normal, orientation))
 		}
 		this.p = center;
 		this.w = width;
 		this.h = height;
 		this.constants = normal.concat([-normal[0]*center[0] - normal[1]*center[1] - normal[2]*center[2]]);
-		this.c = -1*Math.abs(coeff);
+		this.coeff = -1*Math.abs(coeff);
 		this.num = num;
 
 		let points = [
-			add(add(this.p, mult_scalar(this.dir.x, this.w)), mult_scalar(this.dir.y, this.h)),
-			add(add(this.p, mult_scalar(this.dir.x, this.w)), mult_scalar(this.dir.y, -this.h)),
-			add(add(this.p, mult_scalar(this.dir.x, -this.w)), mult_scalar(this.dir.y, -this.h)),
-			add(add(this.p, mult_scalar(this.dir.x, -this.w)), mult_scalar(this.dir.y, this.h))
+			vec3.scaleAndAdd([0,0,0], vec3.scaleAndAdd([0,0,0], this.p, this.dir.x, this.w), this.dir.y, this.h),
+			vec3.scaleAndAdd([0,0,0], vec3.scaleAndAdd([0,0,0], this.p, this.dir.x, this.w), this.dir.y, -this.h),
+			vec3.scaleAndAdd([0,0,0], vec3.scaleAndAdd([0,0,0], this.p, this.dir.x, -this.w), this.dir.y, -this.h),
+			vec3.scaleAndAdd([0,0,0], vec3.scaleAndAdd([0,0,0], this.p, this.dir.x, -this.w), this.dir.y, this.h)
 		];
 		let lin = [];
 		let color = [1, 1, 1, 1];
@@ -135,12 +134,12 @@ class WallConstraint{
 			let p1 = s1.slice(n*IND.FPP + IND.POS, n*IND.FPP + IND.POS + 3);
 			let p2 = s2.slice(n*IND.FPP + IND.POS, n*IND.FPP + IND.POS + 3);
 			if(dist_point_plane(p1, this.constants) >= 0 && dist_point_plane(p2, this.constants) < 0){
-				let p = add(p1, mult_scalar(this.n, dist_point_plane(p1, this.constants)));
-				let p_rel = sub(p, this.p);
-				if(Math.abs(dot(p_rel, this.dir.x)) <= this.w && Math.abs(dot(p_rel, this.dir.y)) <= this.h){
+				let p = vec3.scaleAndAdd([0,0,0], p1, this.n, dist_point_plane(p1, this.constants));
+				let p_rel = vec3.subtract([0,0,0], p, this.p);
+				if(Math.abs(vec3.dot([0,0,0], p_rel, this.dir.x)) <= this.w && Math.abs(vec3.dot([0,0,0], p_rel, this.dir.y)) <= this.h){
 					let v = s2.slice(n*IND.FPP + IND.VEL, n*IND.FPP + IND.VEL + 3);
-					let v_perp = mult_scalar(this.n, dot(v, this.n));
-					v = add(sub(v, v_perp), mult_scalar(v_perp, this.c));
+					let v_perp = vec3.scale([0,0,0], this.n, vec3.dot([0,0,0], v, this.n));
+					vec3.scaleAndAdd(v, vec3.subtract([0,0,0], v, v_perp), v_perp, this.coeff);
 					for(let i = 0; i < 3; i++){
 						s2[n*IND.FPP + IND.POS + i] = p[i];
 						s2[n*IND.FPP + IND.VEL + i] = v[i];
