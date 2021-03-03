@@ -1,9 +1,10 @@
 class PlayerController{
-	constructor(position, sensitivity, move_speed, jump_force){
+	constructor(position, sensitivity, move_speed, jump_force, air_control){
 		this.pos = position;
 		this.sens = sensitivity;
 		this.speed = move_speed;
 		this.jump = jump_force;
+		this.air_control = air_control;
 		this.up = [0, 0, 1];
 		this.dir = [1, 0, 0];
 		this.for = [1, 0, 0];
@@ -25,22 +26,26 @@ class PlayerController{
 
 			let rotation = mat4.create();
 			mat4.rotate(rotation, mat4.create(), -dx, this.up);
-			mat4.rotate(rotation, rotation, -dy, vec3.cross([0,0,0], this.dir, this.up));
+			mat4.rotate(rotation, rotation, -dy, this.lat);
 
 			vec3.transformMat4(this.dir, this.dir, rotation);
-			vec3.normalize(this.for, vec3.scaleAndAdd([0,0,0], this.dir, this.up, -1*vec3.dot(this.dir, this.up)));
-			vec3.cross(this.lat, this.for, this.up);
 		}
 	}
 
 	update(state, input, up){
+		let up_da = Math.acos(vec3.dot(up, this.up));
+		let up_dp = vec3.normalize([0,0,0], vec3.subtract([0,0,0], up, this.up));
 		this.up = up;
+
+		vec3.normalize(this.for, vec3.scaleAndAdd([0,0,0], this.dir, this.up, -1*vec3.dot(this.dir, this.up)));
+		vec3.cross(this.lat, this.for, this.up);
+		let rotation = mat4.rotate(mat4.create(), mat4.create(), -up_da*vec3.dot(up_dp, this.for), this.lat);
+		vec3.transformMat4(this.dir, this.dir, rotation);
+
 		this.pos = state.slice(IND.POS, IND.POS + 3);
 		vec3.scaleAndAdd(this.head, this.pos, this.up, this.height);
-		let move_force = [0, 0, 0];
-		if(state[IND.LIF] > .1)
-			return move_force;
 
+		let move_force = [0, 0, 0];
 		let strafe_vel = [0, 0, 0];
 		if(input.W)
 			vec3.scaleAndAdd(strafe_vel, strafe_vel, this.for, 1);
@@ -59,6 +64,8 @@ class PlayerController{
 	
 		if(vec3.dot(vel_diff, strafe_vel) > 0)
 			vec3.scale(move_force, vel_diff, 1000); 
+		if(state[IND.LIF] > .1)
+			return vec3.scale(move_force, move_force, this.air_control);
 
 		if(input.SPACE){
 			state[IND.LIF] += 1;

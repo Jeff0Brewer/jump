@@ -15,7 +15,7 @@ function main(){
 	c.height = window.innerHeight;
 	setup_gl(c);
 
-	player = new PlayerController([0, 0, 100], .01, 40, 200000, 2);
+	player = new PlayerController([0, 0, 100], .01, 40, 200000, .025);
 	let player_num = 1;
 	let player_bound = 30;
 	let player_sys = {
