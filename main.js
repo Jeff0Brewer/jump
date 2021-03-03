@@ -1,5 +1,13 @@
-let paused = false;
-let fovy = 70*(Math.PI/180);
+paused = false;
+fovy = 70*(Math.PI/180);
+
+INPUT = {
+	W: false,
+	A: false,
+	S: false,
+	D: false,
+	SPACE: false,
+};
 
 function main(){
 	c = document.getElementById('canvas');
@@ -185,21 +193,21 @@ function main(){
 		F: [
 			new SingleForcer([0, 0, 0], 0),
 			new GravityForcer(-9.8, player_num),
-			new DragForcer(.01, player_num)
+			new DragForcer(.05, player_num)
 		],
 		C: [
 			new AxisConstraint(0, -1, -player_bound, .95, player_num),
 			new AxisConstraint(0, 1, player_bound, .95, player_num),
 			new AxisConstraint(1, -1, -player_bound, .95, player_num),
 			new AxisConstraint(1, 1, player_bound, .95, player_num),
-			new AxisConstraint(2, -1, 0, .95, player_num),
+			new AxisConstraint(2, -1, 0, .25, player_num),
 			new AxisConstraint(2, 1, 2*player_bound, .95, player_num)
 		],
 		init: function(){
 			let p = player_pos;
 			let v = [0, 0, 0];
 			let f = [0, 0, 0];
-			let m = 50;
+			let m = 75;
 			let s = 0;
 			let l = 0;
 			let c = [0, 0, 0, 1];
@@ -207,13 +215,10 @@ function main(){
 		}
 	}
 
-	cam = new CameraController(player_pos, [0, 0, 3], .01);
+	player = new PlayerController([0, 0, 0], .01, 20, 50000, 2);
 
 
-	let SYS_IND = {
-		PLAYER: 0,
-		FIRE: 1
-	}
+	PLAYER_SYS = 0;
 	part_sys = [
 		new PartSys(player_sys.num, player_sys.F, player_sys.C, player_sys.init),
 		new PartSys(boid_sys.num, boid_sys.F, boid_sys.C, boid_sys.init),
@@ -255,12 +260,9 @@ function main(){
 
 	let timestep = 1000/60;
 	var tick = function(){
-		
-		let strafe_force = cam.strafe(timestep);
-		if(strafe_force != undefined){
-			part_sys[SYS_IND.PLAYER].F[0].set_force(strafe_force);
-		}
+
 		if(!paused){
+			part_sys[PLAYER_SYS].F[0].set_force(player.update(part_sys[PLAYER_SYS].s2, INPUT));
 			for(let i = 0; i < part_sys.length; i++){
 				part_sys[i].applyAllForces(part_sys[i].s1, part_sys[i].F);
 				part_sys[i].solver(timestep);
@@ -270,10 +272,7 @@ function main(){
 			}
 		}
 
-		mat4.lookAt(view_matrix, 
-			vec3.add([0, 0, 0], cam.pos, part_sys[SYS_IND.PLAYER].s2.slice(0, 3)),
-			vec3.add([0, 0, 0], cam.foc, part_sys[SYS_IND.PLAYER].s2.slice(0, 3)),
-			[0, 0, 1]);
+		mat4.lookAt(view_matrix, player.pos, vec3.add([0, 0, 0], player.pos, player.dir), player.up);
 		for(let i = 0; i < mvp_shaders.length; i++){
 			switch_shader(mvp_shaders[i]);
 			gl.uniformMatrix4fv(u_ViewMatrix[i], false, view_matrix);
@@ -287,16 +286,15 @@ function main(){
 	window.addEventListener('keyup', key_up, false);
 
 	document.addEventListener('pointerlockchange', function(){
-		cam.locked = (document.pointerLockElement == c);
+		player.pointerlockchange(document.pointerLockElement == c);
 	})
 
 	c.onmousedown = function(e){
-		 this.requestPointerLock();
-		cam.mousedown(e);
+		this.requestPointerLock();
 	}
 
 	c.onmousemove = function(e){
-		cam.mousemove(e)
+		player.mousemove(e);
 	}
 }
 
@@ -312,16 +310,19 @@ function key_down(e){
 	let char = String.fromCharCode(e.keyCode);
 	switch(char){
 		case 'W':
-			cam.add_strafe([0, 1]);
+			INPUT.W = true;
 			break;
 		case 'A':
-			cam.add_strafe([-1, 0]);
+			INPUT.A = true;
 			break;
 		case 'S':
-			cam.add_strafe([0, -1]);
+			INPUT.S = true;
 			break;
 		case 'D':
-			cam.add_strafe([1, 0]);
+			INPUT.D = true;
+			break;
+		case ' ':
+			INPUT.SPACE = true;
 			break;
 		case 'R':
 			if(!paused)
@@ -339,17 +340,19 @@ function key_up(e){
 	let char = String.fromCharCode(e.keyCode);
 	switch(char){
 		case 'W':
-			cam.add_strafe([0, -1]);
+			INPUT.W = false;
 			break;
 		case 'A':
-			cam.add_strafe([1, 0]);
+			INPUT.A = false;
 			break;
 		case 'S':
-			cam.add_strafe([0, 1]);
+			INPUT.S = false;
 			break;
 		case 'D':
-			cam.add_strafe([-1, 0]);
+			INPUT.D = false;
 			break;
+		case ' ':
+			INPUT.SPACE = false;
 	}
 }
 
