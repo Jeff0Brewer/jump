@@ -1,4 +1,4 @@
-IND = { // px, py, pz, vx, vy, vz, fx, fy, fz, m
+IND = { // px, py, pz, vx, vy, vz, fx, fy, fz, m, s, l, cr, cg, cb, ca
 	POS: 0, //position
 	VEL: 3, //velocity
 	FOR: 6, //force

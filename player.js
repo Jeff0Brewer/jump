@@ -8,7 +8,7 @@ class PlayerController{
 		this.dir = [1, 0, 0];
 		this.for = [1, 0, 0];
 		this.lat = vec3.cross([0,0,0], this.for, this.up);
-		this.height = 1.8288;
+		this.height = 2;
 		this.head = vec3.scaleAndAdd([0,0,0], this.pos, this.up, this.height);
 
 		this.mouse_locked = false;
@@ -33,9 +33,13 @@ class PlayerController{
 		}
 	}
 
-	update(state, input){
+	update(state, input, up){
+		this.up = up;
 		this.pos = state.slice(IND.POS, IND.POS + 3);
 		vec3.scaleAndAdd(this.head, this.pos, this.up, this.height);
+		let move_force = [0, 0, 0];
+		if(state[IND.LIF] > .1)
+			return move_force;
 
 		let strafe_vel = [0, 0, 0];
 		if(input.W)
@@ -51,11 +55,13 @@ class PlayerController{
 		let curr_vel = state.slice(IND.VEL, IND.VEL + 3);
 		let curr_pll = vec3.normalize([0,0,0], vec3.cross([0,0,0], this.up, vec3.cross([0,0,0], curr_vel, this.up)));
 		vec3.scale(curr_pll, curr_pll, vec3.dot(curr_vel, curr_pll));
+		let vel_diff = vec3.subtract([0,0,0], strafe_vel, curr_pll);
 	
-		let move_force = [0, 0, 0];
-		vec3.scale(move_force, vec3.subtract([0,0,0], strafe_vel, curr_pll), 1000); 
+		if(vec3.dot(vel_diff, strafe_vel) > 0)
+			vec3.scale(move_force, vel_diff, 1000); 
 
 		if(input.SPACE){
+			state[IND.LIF] += 1;
 			input.SPACE = false;
 			vec3.scaleAndAdd(move_force, move_force, this.up, this.jump);
 		}

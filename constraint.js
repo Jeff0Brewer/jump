@@ -32,14 +32,15 @@ class FireConstraint{
 }
 
 class SphereConstraint{
-	constructor(center, radius, coeff, num){
+	constructor(center, radius, coeff, ground, num){
 		this.num = num;
 		this.c = center;
 		this.r = radius;
 		this.coeff = -1*Math.abs(coeff);
+		this.isgrnd = ground;
 
 
-		let iso = gen_iso(1, 'LIN');
+		let iso = gen_iso(2, 'LIN');
 		let lin = [];
 		let color = [1, 1, 1, 1];
 		for(let i = 0; i < iso.length; i++){
@@ -57,6 +58,8 @@ class SphereConstraint{
 			let p2 = s2.slice(n*IND.FPP + IND.POS, n*IND.FPP + IND.POS + 3);
 			let v2 = s2.slice(n*IND.FPP + IND.VEL, n*IND.FPP + IND.VEL + 3);
 			if(dist(p2, this.c) < this.r && vec3.dot(vec3.subtract([0,0,0], p2, this.c), v2) < 0){
+				if(this.isgrnd)
+					s2[n*IND.FPP + IND.LIF] = 0;
 				let v2 = s2.slice(n*IND.FPP + IND.VEL, n*IND.FPP + IND.VEL + 3);
 				let dir = vec3.normalize([0,0,0], vec3.subtract([0,0,0], p2, this.c));
 				let v_perp = vec3.scale([0,0,0], dir, vec3.dot(v2, dir));
@@ -97,7 +100,7 @@ class FixConstraint{
 }
 
 class WallConstraint{
-	constructor(normal, orientation, center, width, height, coeff, num){
+	constructor(normal, orientation, center, width, height, coeff, ground, num){
 		this.n = vec3.normalize([0,0,0], normal);
 		this.dir = {
 			x: vec3.normalize([0,0,0], orientation),
@@ -108,6 +111,7 @@ class WallConstraint{
 		this.h = height;
 		this.constants = normal.concat([-normal[0]*center[0] - normal[1]*center[1] - normal[2]*center[2]]);
 		this.coeff = -1*Math.abs(coeff);
+		this.isgrnd = ground;
 		this.num = num;
 
 		let points = [
@@ -137,6 +141,8 @@ class WallConstraint{
 				let p = vec3.scaleAndAdd([0,0,0], p1, this.n, dist_point_plane(p1, this.constants));
 				let p_rel = vec3.subtract([0,0,0], p, this.p);
 				if(Math.abs(vec3.dot(p_rel, this.dir.x)) <= this.w && Math.abs(vec3.dot(p_rel, this.dir.y)) <= this.h){
+					if(this.isgrnd)
+						s2[n*IND.FPP + IND.LIF] = 0;
 					let v = s2.slice(n*IND.FPP + IND.VEL, n*IND.FPP + IND.VEL + 3);
 					let v_perp = vec3.scale([0,0,0], this.n, vec3.dot(v, this.n));
 					vec3.scaleAndAdd(v, vec3.subtract([0,0,0], v, v_perp), v_perp, this.coeff);
@@ -181,11 +187,12 @@ class BoundConstraint{
 
 
 class AxisConstraint{
-	constructor(axis_ind, dir, offset, coeff, num){
+	constructor(axis_ind, dir, offset, coeff, ground, num){
 		this.ind = axis_ind;
 		this.dir = dir > 0 ? 1 : -1;
 		this.off = offset;
 		this.coeff = -1*Math.abs(coeff);
+		this.isgrnd = ground;
 		this.num = num;
 
 		this.data_len = 0;
@@ -197,6 +204,8 @@ class AxisConstraint{
 			let p2 = s2[n*IND.FPP + IND.POS + this.ind];
 			if((this.dir > 0 && p1 <= this.off && p2 > this.off) || 
 			   (this.dir < 0 && p1 >= this.off && p2 < this.off)){
+			   	if(this.isgrnd)
+					s2[n*IND.FPP + IND.LIF] = 0;
 				s2[n*IND.FPP + IND.POS + this.ind] = this.off;
 				s2[n*IND.FPP + IND.VEL + this.ind] = this.coeff*s2[n*IND.FPP + IND.VEL + this.ind];
 			}

@@ -216,6 +216,27 @@ class AllForcer{
 	}
 }
 
+class PlanetForcer{
+	constructor(pos, mass, num){
+		this.pos = pos;
+		this.Gm = mass*6.6743*Math.pow(10, -11);
+		this.num = num;
+
+		this.data_len = 0;
+	}
+
+	apply_force(s){
+		for(let n = 0; n < this.num; n++){
+			let p = s.slice(n*IND.FPP + IND.POS, n*IND.FPP + IND.POS + 3);
+			let d = dist(this.pos, p);
+			let f = vec3.scale([0,0,0], vec3.normalize([0,0,0], vec3.subtract([0,0,0], this.pos, p)), this.Gm*s[n*IND.FPP + IND.MAS]/(d*d));
+			for(let i = 0; i < f.length; i++){
+				s[n*IND.FPP + IND.FOR + i] += f[i];
+			}
+		}
+	}
+}
+
 class GravityForcer{
 	constructor(val, num){
 		this.g = val;
