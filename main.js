@@ -272,7 +272,7 @@ function main(){
 			}
 		}
 
-		mat4.lookAt(view_matrix, player.pos, vec3.add([0, 0, 0], player.pos, player.dir), player.up);
+		mat4.lookAt(view_matrix, player.head, vec3.add([0, 0, 0], player.head, player.dir), player.up);
 		for(let i = 0; i < mvp_shaders.length; i++){
 			switch_shader(mvp_shaders[i]);
 			gl.uniformMatrix4fv(u_ViewMatrix[i], false, view_matrix);

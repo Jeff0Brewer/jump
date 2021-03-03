@@ -1,12 +1,15 @@
 class PlayerController{
-	constructor(position, sensitivity, move_speed, jump_force, height){
+	constructor(position, sensitivity, move_speed, jump_force){
 		this.pos = position;
-		this.dir = [1, 0, 0];
-		this.up = [0, 0, 1];
 		this.sens = sensitivity;
 		this.speed = move_speed;
 		this.jump = jump_force;
-		this.height = height;
+		this.up = [0, 0, 1];
+		this.dir = [1, 0, 0];
+		this.for = [1, 0, 0];
+		this.lat = vec3.cross([0,0,0], this.for, this.up);
+		this.height = 1.8288;
+		this.head = vec3.scaleAndAdd([0,0,0], this.pos, this.up, this.height);
 
 		this.mouse_locked = false;
 	}
@@ -23,39 +26,40 @@ class PlayerController{
 			let rotation = mat4.create();
 			mat4.rotate(rotation, mat4.create(), -dx, this.up);
 			mat4.rotate(rotation, rotation, -dy, vec3.cross([0,0,0], this.dir, this.up));
+
 			vec3.transformMat4(this.dir, this.dir, rotation);
+			vec3.normalize(this.for, vec3.scaleAndAdd([0,0,0], this.dir, this.up, -1*vec3.dot(this.dir, this.up)));
+			vec3.cross(this.lat, this.for, this.up);
 		}
 	}
 
 	update(state, input){
-		let strafe = [0, 0, 0];
-		let forward = vec3.normalize([0,0,0], vec3.scaleAndAdd([0,0,0], this.dir, this.up, -1*vec3.dot(this.dir, this.up)));
-		let lateral = vec3.cross([0,0,0], forward, this.up);
+		this.pos = state.slice(IND.POS, IND.POS + 3);
+		vec3.scaleAndAdd(this.head, this.pos, this.up, this.height);
+
+		let strafe_vel = [0, 0, 0];
 		if(input.W)
-			vec3.scaleAndAdd(strafe, strafe, forward, 1);
+			vec3.scaleAndAdd(strafe_vel, strafe_vel, this.for, 1);
 		if(input.A)
-			vec3.scaleAndAdd(strafe, strafe, lateral, -1);
+			vec3.scaleAndAdd(strafe_vel, strafe_vel, this.lat, -1);
 		if(input.S)
-			vec3.scaleAndAdd(strafe, strafe, forward, -1);
+			vec3.scaleAndAdd(strafe_vel, strafe_vel, this.for, -1);
 		if(input.D)
-			vec3.scaleAndAdd(strafe, strafe, lateral, 1);
-		;
-		vec3.scale(strafe, vec3.normalize(strafe, strafe), this.speed);
+			vec3.scaleAndAdd(strafe_vel, strafe_vel, this.lat, 1);
+		vec3.scale(strafe_vel, vec3.normalize([0,0,0], strafe_vel), this.speed);
 
-		let vel = state.slice(IND.VEL, IND.VEL + 3);
-		let vel_d = vec3.normalize([0,0,0], vec3.cross([0,0,0], this.up, vec3.cross([0,0,0], vel, this.up)));
-		vec3.scale(vel_d, vel_d, vec3.dot(vel, vel_d));
-		vec3.subtract(vel_d, strafe, vel_d); 
-
-		let force = [0, 0, 0];
-		vec3.scale(force, vec3.normalize(vel_d, vel_d), vec3.length(vel_d)*10000); 
+		let curr_vel = state.slice(IND.VEL, IND.VEL + 3);
+		let curr_pll = vec3.normalize([0,0,0], vec3.cross([0,0,0], this.up, vec3.cross([0,0,0], curr_vel, this.up)));
+		vec3.scale(curr_pll, curr_pll, vec3.dot(curr_vel, curr_pll));
+	
+		let move_force = [0, 0, 0];
+		vec3.scale(move_force, vec3.subtract([0,0,0], strafe_vel, curr_pll), 1000); 
 
 		if(input.SPACE){
 			input.SPACE = false;
-			vec3.scaleAndAdd(force, force, this.up, this.jump);
+			vec3.scaleAndAdd(move_force, move_force, this.up, this.jump);
 		}
 
-		vec3.scaleAndAdd(this.pos, state.slice(IND.POS, IND.POS + 3), this.up, this.height);
-		return force;
+		return move_force;
 	}
 }
