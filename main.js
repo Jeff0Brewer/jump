@@ -1,5 +1,5 @@
 paused = false;
-fovy = 70*(Math.PI/180);
+fovy = 85*(Math.PI/180);
 
 INPUT = {
 	W: false,
@@ -15,18 +15,18 @@ function main(){
 	c.height = window.innerHeight;
 	setup_gl(c);
 
-	player = new PlayerController([0, 0, 100], .01, 40, 200000, .025);
+	player = new PlayerController([0, 0, 200], .01, 40, 200000, .025);
 	let player_num = 1;
 	let player_bound = 30;
 	let player_sys = {
 		num: player_num,
 		F: [
 			new SingleForcer([0, 0, 0], 0),
-			new PlanetForcer([0, 0, 0], Math.pow(10, 16), player_num),
+			new PlanetForcer([0, 0, 0], 4*Math.pow(10, 16), player_num),
 			new DragForcer(.05, player_num)
 		],
 		C: [
-			new SphereConstraint([0, 0, 0], 100, .25, true, player_num)
+			new SphereConstraint([0, 0, 0], 200, .25, true, player_num)
 		],
 		init: function(){
 			let p = player.pos;
@@ -49,7 +49,7 @@ function main(){
 	}
 
 	drawers = [
-		new Drawer([1, 0, 0], [part_sys[0].num, part_sys[0].FC_num.tri, part_sys[0].FC_num.lin], [gl.POINTS, gl.TRIANGLES, gl.LINES])
+		new TriDrawer(1, part_sys[0].C[0].data[0], [0, 0, 1500, 0])
 	];
 
 	model_matrix = mat4.create();
@@ -60,7 +60,7 @@ function main(){
 	u_ModelMatrix = [];
 	u_ViewMatrix = [];
 	u_ProjMatrix = [];
-	mvp_shaders = [0, 1, 2, 3];
+	mvp_shaders = [0, 1];
 	for(let i = 0; i < mvp_shaders.length; i++){
 		switch_shader(mvp_shaders[i]);
 		u_ModelMatrix.push(gl.getUniformLocation(gl.program, 'u_ModelMatrix'));
@@ -81,7 +81,6 @@ function main(){
 				part_sys[i].applyAllForces(part_sys[i].s1, part_sys[i].F);
 				part_sys[i].solver(timestep);
 				part_sys[i].doConstraint(part_sys[i].s1, part_sys[i].s2, part_sys[i].C);
-				part_sys[i].render(drawers[i]);
 				part_sys[i].swap();
 			}
 		}

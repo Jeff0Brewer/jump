@@ -37,17 +37,7 @@ class BoidForcer{
 			av: av_f
 		};
 
-		let iso = gen_iso(2, 'TRI');
-		let tri = [];
-		let color = [1, 1, 1, 1];
-		for(let i = 0; i < iso.length; i++){
-			tri = tri.concat(vec3.scaleAndAdd([0,0,0], this.c, iso[i], this.r));
-			tri = tri.concat(color);
-			tri.push(0);
-		}
-
-		this.data = [tri, []];
-		this.data_len = [tri.length, 0];
+		this.data_len = 0;
 	}
 
 	apply_force(s){
@@ -93,55 +83,6 @@ class BoidForcer{
 				s[n*IND.FPP + IND.FOR + i] += f[i];
 			}
 		}
-	}
-
-	get_buf_data(s){
-		return this.data;
-	}
-}
-
-class SpringForcer{
-	constructor(length, strength, damping, ind_a, ind_b){
-		this.len = length;
-		this.str = strength;
-		this.dmp = damping;
-		this.inds = [ind_a, ind_b];
-
-		this.data_len = [0, FPV*2];
-	}
-
-	apply_force(s){
-		let pos_diff = vec3.subtract([0,0,0], s.slice(this.inds[0]*IND.FPP + IND.POS, this.inds[0]*IND.FPP + IND.POS + 3), s.slice(this.inds[1]*IND.FPP + IND.POS, this.inds[1]*IND.FPP + IND.POS + 3));
-		let vel_diff = vec3.subtract([0,0,0], s.slice(this.inds[0]*IND.FPP + IND.VEL, this.inds[0]*IND.FPP + IND.VEL + 3), s.slice(this.inds[1]*IND.FPP + IND.VEL, this.inds[1]*IND.FPP + IND.VEL + 3));
-		if(mag(pos_diff) == 0)
-			pos_diff = APRX_0.slice();
-		if(mag(vel_diff) == 0)
-			vel_diff = APRX_0.slice();
-		let d = mag(pos_diff) - this.len;
-		let dir = vec3.normalize([0,0,0], pos_diff);
-		vec3.scale(vel_diff, dir, vec3.dot(vel_diff, dir));
-
-		let f = vec3.scale([0,0,0], dir, this.str*Math.pow(d, 2)*Math.sign(d) - (vec3.dot(vel_diff, dir) > 0 ? -1 : 1)*mag(vel_diff)*this.dmp);
-		for(let i = 0; i < this.inds.length; i++){
-			for(let j = 0; j < f.length; j++){
-				s[this.inds[i]*IND.FPP + IND.FOR + j] += (i == 0 ? -1 : 1)*f[j];
-			}
-		}
-	}
-
-	get_buf_data(s){
-		let lin = [];
-		let color = [1, 1, 1, .5];
-		for(let i = 0; i < this.inds.length; i++){
-			for(let j = 0; j < 3; j++){
-				lin.push(s[this.inds[i]*IND.FPP + IND.POS + j]);
-			}
-			for(let j = 0; j < 4; j++){
-				lin.push(color[j]);
-			}
-			lin.push(0);
-		}
-		return [[], lin];
 	}
 }
 

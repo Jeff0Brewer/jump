@@ -166,7 +166,7 @@ function PartSys(num, F, C, init){
 		}
 	}
 
-	this.render = function(drawer){
+	this.render = function(){
 		let buf = new Float32Array((this.num + this.FC_num.all)*FPV);
 		let buf_ind = 0;
 		for(let n = 0; n < this.num; n++){
@@ -193,7 +193,7 @@ function PartSys(num, F, C, init){
 			}
 		}
 		
-		drawer.buffer_data(0, buf);
+		return buf;
 	}
 
 	this.swap = function(){

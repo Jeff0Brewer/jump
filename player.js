@@ -39,7 +39,8 @@ class PlayerController{
 
 		vec3.normalize(this.for, vec3.scaleAndAdd([0,0,0], this.dir, this.up, -1*vec3.dot(this.dir, this.up)));
 		vec3.cross(this.lat, this.for, this.up);
-		let rotation = mat4.rotate(mat4.create(), mat4.create(), -up_da*vec3.dot(up_dp, this.for), this.lat);
+		let rotation = mat4.create();
+		mat4.rotate(rotation, rotation, -up_da*vec3.dot(up_dp, this.for), this.lat);
 		vec3.transformMat4(this.dir, this.dir, rotation);
 
 		this.pos = state.slice(IND.POS, IND.POS + 3);

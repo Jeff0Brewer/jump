@@ -40,17 +40,17 @@ class SphereConstraint{
 		this.isgrnd = ground;
 
 
-		let iso = gen_iso(2, 'LIN');
-		let lin = [];
+		let iso = gen_iso(3, 'TRI');
+		let tri = [];
 		let color = [1, 1, 1, 1];
 		for(let i = 0; i < iso.length; i++){
-			lin = lin.concat(vec3.scaleAndAdd([0,0,0], this.c, iso[i], this.r));
-			lin = lin.concat(color);
-			lin.push(0);
+			tri = tri.concat(vec3.scaleAndAdd([0,0,0], this.c, iso[i], this.r));
+			tri = tri.concat(color);
+			tri = tri.concat(iso[i]);
 		}
 
-		this.data = [[], lin];
-		this.data_len = [0, lin.length];
+		this.data = [new Float32Array(tri), []];
+		this.data_len = [tri.length, 0];
 	}
 
 	constrain(s1, s2){
@@ -96,67 +96,6 @@ class FixConstraint{
 		for(let i = 0; i < 3; i++){
 			s2[this.ind*IND.FPP + IND.FOR + i] = 0;
 		}
-	}
-}
-
-class WallConstraint{
-	constructor(normal, orientation, center, width, height, coeff, ground, num){
-		this.n = vec3.normalize([0,0,0], normal);
-		this.dir = {
-			x: vec3.normalize([0,0,0], orientation),
-			y: vec3.normalize([0,0,0], vec3.cross([0,0,0], normal, orientation))
-		}
-		this.p = center;
-		this.w = width;
-		this.h = height;
-		this.constants = normal.concat([-normal[0]*center[0] - normal[1]*center[1] - normal[2]*center[2]]);
-		this.coeff = -1*Math.abs(coeff);
-		this.isgrnd = ground;
-		this.num = num;
-
-		let points = [
-			vec3.scaleAndAdd([0,0,0], vec3.scaleAndAdd([0,0,0], this.p, this.dir.x, this.w), this.dir.y, this.h),
-			vec3.scaleAndAdd([0,0,0], vec3.scaleAndAdd([0,0,0], this.p, this.dir.x, this.w), this.dir.y, -this.h),
-			vec3.scaleAndAdd([0,0,0], vec3.scaleAndAdd([0,0,0], this.p, this.dir.x, -this.w), this.dir.y, -this.h),
-			vec3.scaleAndAdd([0,0,0], vec3.scaleAndAdd([0,0,0], this.p, this.dir.x, -this.w), this.dir.y, this.h)
-		];
-		let lin = [];
-		let color = [1, 1, 1, 1];
-		let ind = [0, 1, 1, 2, 2, 3, 3, 0];
-		for(let i = 0; i < ind.length; i++){
-			lin = lin.concat(points[ind[i]]);
-			lin = lin.concat(color);
-			lin.push(0);
-		}
-
-		this.data = [[], lin];
-		this.data_len = [0, lin.length];
-	}
-
-	constrain(s1, s2){
-		for(let n = 0; n < this.num; n++){
-			let p1 = s1.slice(n*IND.FPP + IND.POS, n*IND.FPP + IND.POS + 3);
-			let p2 = s2.slice(n*IND.FPP + IND.POS, n*IND.FPP + IND.POS + 3);
-			if(dist_point_plane(p1, this.constants) >= 0 && dist_point_plane(p2, this.constants) < 0){
-				let p = vec3.scaleAndAdd([0,0,0], p1, this.n, dist_point_plane(p1, this.constants));
-				let p_rel = vec3.subtract([0,0,0], p, this.p);
-				if(Math.abs(vec3.dot(p_rel, this.dir.x)) <= this.w && Math.abs(vec3.dot(p_rel, this.dir.y)) <= this.h){
-					if(this.isgrnd)
-						s2[n*IND.FPP + IND.LIF] = 0;
-					let v = s2.slice(n*IND.FPP + IND.VEL, n*IND.FPP + IND.VEL + 3);
-					let v_perp = vec3.scale([0,0,0], this.n, vec3.dot(v, this.n));
-					vec3.scaleAndAdd(v, vec3.subtract([0,0,0], v, v_perp), v_perp, this.coeff);
-					for(let i = 0; i < 3; i++){
-						s2[n*IND.FPP + IND.POS + i] = p[i];
-						s2[n*IND.FPP + IND.VEL + i] = v[i];
-					}
-				}
-			}
-		}
-	}
-
-	get_buf_data(s){
-		return this.data;
 	}
 }
 
