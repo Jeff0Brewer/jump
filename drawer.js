@@ -25,7 +25,9 @@ class TriDrawer{
 		gl.enableVertexAttribArray(this.a_Normal);
 
 		this.u_Light = gl.getUniformLocation(gl.program, 'u_Light');
+		this.u_Diffuse = gl.getUniformLocation(gl.program, 'u_Diffuse');
 		gl.uniform4fv(this.u_Light, light);
+		gl.uniform1f(this.u_Diffuse, .025);
 	}
 
 	set_light = function(light){
