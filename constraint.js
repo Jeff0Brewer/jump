@@ -40,7 +40,7 @@ class SphereConstraint{
 		this.isgrnd = ground;
 
 
-		let iso = gen_iso(4);
+		let iso = gen_planet(gen_iso(4));
 		let tri = new Float32Array(iso.length/3*10);
 		let color = new Float32Array([1, 1, 1, 1]);
 		let v_len = iso.length/3;

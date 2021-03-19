@@ -10,6 +10,8 @@ INPUT = {
 };
 
 function main(){
+	noise.seed(Math.random());
+
 	c = document.getElementById('canvas');
 	c.width = window.innerWidth*window.devicePixelRatio;
 	c.height = window.innerHeight*window.devicePixelRatio;
