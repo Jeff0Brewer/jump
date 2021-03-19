@@ -39,7 +39,7 @@ function dist_point_line(pt, ln_0, ln_1){
 }
 
 //generate an isosphere with given iterations
-function gen_iso(iter, mode){ 
+function gen_iso(iter){ 
 	//init base with 20 sides
 	let f = (1.0 + Math.sqrt(5.0)) / 2.0; 
 	let v = [[-1,f,0],[1,f,0],[-1,-f,0],
@@ -73,15 +73,13 @@ function gen_iso(iter, mode){
 		t = n_t.slice();
 	}
 
-	let o = [];
-	if(mode == 'TRI'){
-		for(let i = 0; i < t.length; i++){
-			o = o.concat([v[t[i][0]]], [v[t[i][1]]], [v[t[i][2]]]);
-		}
-	}
-	if(mode == 'LIN'){
-		for(let i = 0; i < t.length; i++){
-			o = o.concat([v[t[i][0]]], [v[t[i][1]]], [v[t[i][1]]], [v[t[i][2]]], [v[t[i][2]]], [v[t[i][0]]]);
+	let tlen = 9;
+	let o = new Float32Array(t.length*tlen);
+	for(let i = 0; i < t.length; i++){
+		for(let j = 0; j < 3; j++){
+			for(let l = 0; l < 3; l++){
+				o[i*tlen + j*3 + l] = v[t[i][j]][l];
+			}
 		}
 	}
 	return o;

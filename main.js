@@ -11,22 +11,22 @@ INPUT = {
 
 function main(){
 	c = document.getElementById('canvas');
-	c.width = window.innerWidth;
-	c.height = window.innerHeight;
+	c.width = window.innerWidth*window.devicePixelRatio;
+	c.height = window.innerHeight*window.devicePixelRatio;
 	setup_gl(c);
 
-	player = new PlayerController([0, 0, 200], .01, 40, 200000, .025);
+	player = new PlayerController([0, 0, 150], .01, 40, 2*Math.pow(10, 5), .025);
 	let player_num = 1;
 	let player_bound = 30;
 	let player_sys = {
 		num: player_num,
 		F: [
 			new SingleForcer([0, 0, 0], 0),
-			new PlanetForcer([0, 0, 0], 4*Math.pow(10, 16), player_num),
+			new PlanetForcer([0, 0, 0], 2*Math.pow(10, 16), player_num),
 			new DragForcer(.05, player_num)
 		],
 		C: [
-			new SphereConstraint([0, 0, 0], 200, .25, true, player_num)
+			new SphereConstraint([0, 0, 0], 150, .25, true, player_num)
 		],
 		init: function(){
 			let p = player.pos;
@@ -56,6 +56,7 @@ function main(){
 	view_matrix = mat4.create();
 	proj_matrix = mat4.create();
 	mat4.perspective(proj_matrix, fovy, c.width/c.height, .01, 500000);
+	mat4.lookAt(view_matrix, [0, -300, 0], [0, 0, 0], [0, 0, 1]);
 	
 	u_ModelMatrix = [];
 	u_ViewMatrix = [];
@@ -170,8 +171,8 @@ function key_up(e){
 }
 
 document.body.onresize = function(){
-	c.width = window.innerWidth;
-	c.height = window.innerHeight;
+	c.width = window.innerWidth*window.devicePixelRatio;
+	c.height = window.innerHeight*window.devicePixelRatio;
 	if(gl){
 		gl.viewport(0, 0, c.width, c.height);
 		mat4.perspective(proj_matrix, fovy, c.width/c.height, .01, 500000);

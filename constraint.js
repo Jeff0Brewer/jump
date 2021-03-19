@@ -40,16 +40,32 @@ class SphereConstraint{
 		this.isgrnd = ground;
 
 
-		let iso = gen_iso(3, 'TRI');
-		let tri = [];
-		let color = [1, 1, 1, 1];
-		for(let i = 0; i < iso.length; i++){
-			tri = tri.concat(vec3.scaleAndAdd([0,0,0], this.c, iso[i], this.r));
-			tri = tri.concat(color);
-			tri = tri.concat(iso[i]);
+		let iso = gen_iso(4);
+		let tri = new Float32Array(iso.length/3*10);
+		let color = new Float32Array([1, 1, 1, 1]);
+		let v_len = iso.length/3;
+		for(let i = 0; i < v_len; i += 3){
+			let a = iso.slice(i*3, i*3 + 3);
+			let b = iso.slice((i+1)*3, (i+1)*3 + 3);
+			let c = iso.slice((i+2)*3, (i+2)*3 + 3);
+			let n = vec3.normalize([0,0,0], vec3.cross([0,0,0], vec3.subtract([0,0,0], b, a), vec3.subtract([0,0,0], c, a)));
+			for(let j = 0; j < 3; j++){
+				tri.set([
+					this.r*iso[(i+j)*3],
+					this.r*iso[(i+j)*3 + 1],
+					this.r*iso[(i+j)*3 + 2],
+					color[0],
+					color[1],
+					color[2],
+					color[3],
+					n[0],
+					n[1],
+					n[2]
+				], (i + j)*10);
+			}
 		}
 
-		this.data = [new Float32Array(tri), []];
+		this.data = [tri, []];
 		this.data_len = [tri.length, 0];
 	}
 
