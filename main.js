@@ -17,19 +17,17 @@ function main(){
 	c.height = window.innerHeight*window.devicePixelRatio;
 	setup_gl(c);
 
-	player = new PlayerController([0, 0, 150], .01, 40, 2*Math.pow(10, 5), .025);
+	planet = new Planet([0, 0, 0], 2*Math.pow(10, 16), 150)
+	player = new PlayerController([0, 0, 200], .01, 40, 2*Math.pow(10, 5), .025);
 	let player_num = 1;
 	let player_bound = 30;
 	let player_sys = {
 		num: player_num,
 		F: [
 			new SingleForcer([0, 0, 0], 0),
-			new PlanetForcer([0, 0, 0], 2*Math.pow(10, 16), player_num),
 			new DragForcer(.05, player_num)
-		],
-		C: [
-			new SphereConstraint([0, 0, 0], 150, .25, true, player_num)
-		],
+		].concat(planet.F),
+		C: planet.C,
 		init: function(){
 			let p = player.pos;
 			let v = [0, 0, 0];
@@ -51,7 +49,7 @@ function main(){
 	}
 
 	drawers = [
-		new TriDrawer(1, part_sys[0].C[0].data[0], [0, 0, 1500, 0])
+		new TriDrawer(1, planet.data, [0, 0, 1500, 0])
 	];
 
 	model_matrix = mat4.create();

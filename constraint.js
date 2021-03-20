@@ -1,3 +1,48 @@
+class TriConstraint{
+	constructor(p1, p2, p3, coeff, num){
+		this.num = num;
+		this.coeff = coeff;
+		this.A = p1;
+		this.B = p2;
+		this.C = p3;
+		this.E1 = vec3.subtract(vec3.create(), this.B, this.A);
+		this.E2 = vec3.subtract(vec3.create(), this.C, this.A);
+		this.N = vec3.cross(vec3.create(), this.E1, this.E2);
+		this.n = vec3.normalize(vec3.create(), this.N);
+
+		this.data_len = 0;
+	}
+
+	constrain(s1, s2){
+		for(let n = 0; n < this.num; n++){
+			let org = s1.slice(n*IND.FPP + IND.POS, n*IND.FPP + IND.POS + 3);
+			let dir = vec3.subtract(vec3.create(), s2.slice(n*IND.FPP + IND.POS, n*IND.FPP + IND.POS + 3), org);
+			let ts = vec3.length(dir);
+			dir = vec3.normalize(dir, dir);
+
+			let det = -1*vec3.dot(dir, this.N);
+			let invdet = 1/det;
+			let AO = vec3.subtract(vec3.create(), org, this.A);
+			let DAO = vec3.cross(vec3.create(), AO, dir);
+			let u = vec3.dot(this.E2, DAO) * invdet;
+			let v = -1*vec3.dot(this.E1, DAO) * invdet;
+			let t = vec3.dot(AO, this.N) * invdet;
+			if(det > .0000001 && t >= 0 && t < ts && u >= 0 && v >= 0 && (u+v) <= 1){
+				let p2 = vec3.scaleAndAdd(vec3.create(), org, dir, t);
+				vec3.scaleAndAdd(p2, p2, this.n, .001);
+				let v2 = s2.slice(n*IND.FPP + IND.VEL, n*IND.FPP + IND.VEL + 3);
+				vec3.scaleAndAdd(v2, v2, this.n, -(1 + this.coeff)*vec3.dot(this.n, v2));
+
+				s2[n*IND.FPP + IND.LIF] = 0;
+				for(let i = 0; i < 3; i++){
+					s2[n*IND.FPP + IND.POS + i] = p2[i];
+					s2[n*IND.FPP + IND.VEL + i] = v2[i];
+				}
+			}
+		}
+	}
+}
+
 class FireConstraint{
 	constructor(lifetime, max_mass, max_size, color_map, init, num){
 		this.num = num;
@@ -139,7 +184,6 @@ class BoundConstraint{
 		}
 	}
 }
-
 
 class AxisConstraint{
 	constructor(axis_ind, dir, offset, coeff, ground, num){
