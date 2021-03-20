@@ -17,8 +17,8 @@ function main(){
 	c.height = window.innerHeight*window.devicePixelRatio;
 	setup_gl(c);
 
-	planet = new Planet([0, 0, 0], 2*Math.pow(10, 16), 150)
-	player = new PlayerController([0, 0, 200], .01, 40, 2*Math.pow(10, 5), .025);
+	planet = new Planet([0, 0, 0], 4*Math.pow(10, 16), 250)
+	player = new PlayerController([0, 0, 300], .01, 40, 2*Math.pow(10, 5), .025);
 	let player_num = 1;
 	let player_bound = 30;
 	let player_sys = {
@@ -27,7 +27,7 @@ function main(){
 			new SingleForcer([0, 0, 0], 0),
 			new DragForcer(.05, player_num)
 		].concat(planet.F),
-		C: planet.C,
+		C: [],
 		init: function(){
 			let p = player.pos;
 			let v = [0, 0, 0];
@@ -77,7 +77,9 @@ function main(){
 	var tick = function(){
 
 		if(!paused){
-			part_sys[PLAYER_SYS].F[0].set_force(player.update(part_sys[PLAYER_SYS].s1, INPUT, vec3.normalize([0, 0, 0], part_sys[PLAYER_SYS].s1.slice(0, 3))));
+			let player_pos = part_sys[PLAYER_SYS].s1.slice(0, 3);
+			part_sys[PLAYER_SYS].F[0].set_force(player.update(part_sys[PLAYER_SYS].s1, INPUT, vec3.normalize([0, 0, 0], player_pos)));
+			part_sys[PLAYER_SYS].C = planet.get_C(player_pos);
 			for(let i = 0; i < part_sys.length; i++){
 				part_sys[i].applyAllForces(part_sys[i].s1, part_sys[i].F);
 				part_sys[i].solver(timestep);

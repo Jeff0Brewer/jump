@@ -19,22 +19,6 @@ function PartSys(num, F, C, init){
 	this.s1 = new Float32Array(IND.FPP*num);
 	this.s2 = new Float32Array(IND.FPP*num);
 
-	let FC_tri_len = 0;
-	let FC_lin_len = 0;
-	for(let i = 0; i < this.F.length; i++){
-		FC_tri_len += this.F[i].data_len != 0 ? this.F[i].data_len[0] : 0;
-		FC_lin_len += this.F[i].data_len != 0 ? this.F[i].data_len[1] : 0;
-	}
-	for(let i = 0; i < this.C.length; i++){
-		FC_tri_len += this.C[i].data_len != 0 ? this.C[i].data_len[0] : 0;
-		FC_lin_len += this.C[i].data_len != 0 ? this.C[i].data_len[1] : 0;
-	}
-	this.FC_num = {
-		tri: FC_tri_len/FPV,
-		lin: FC_lin_len/FPV,
-		all: (FC_tri_len + FC_lin_len)/FPV
-	};
-
 	this.init = function(){
 		for(let i = 0; i < this.num; i++){
 			let p_state = this.init_single();
@@ -167,7 +151,7 @@ function PartSys(num, F, C, init){
 	}
 
 	this.render = function(){
-		let buf = new Float32Array((this.num + this.FC_num.all)*FPV);
+		let buf = new Float32Array(this.num*FPV);
 		let buf_ind = 0;
 		for(let n = 0; n < this.num; n++){
 			for(let i = 0; i < 3; i++, buf_ind++){
@@ -178,19 +162,6 @@ function PartSys(num, F, C, init){
 			}
 			buf[buf_ind] = this.s2[n*IND.FPP + IND.SIZ];
 			buf_ind++;
-		}
-
-		let FC = this.F.concat(this.C);
-		let tri_ind = this.num*FPV;
-		let lin_ind = this.num*FPV + this.FC_num.tri*FPV;
-		for(let i = 0; i < FC.length; i++){
-			let data = FC[i].data_len != 0 ? FC[i].get_buf_data(this.s2) : [[], []];
-			for(let j = 0; j < data[0].length; j++, tri_ind++){
-				buf[tri_ind] = data[0][j];
-			}
-			for(let j = 0; j < data[1].length; j++, lin_ind++){
-				buf[lin_ind] = data[1][j];
-			}
 		}
 		
 		return buf;
