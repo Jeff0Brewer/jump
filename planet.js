@@ -4,7 +4,7 @@ class Planet{
 		this.r = radius
 		this.m = mass;
 
-		let tri = gen_planet(gen_iso(5));
+		let tri = gen_terrain(gen_iso(5));
 		let color = new Float32Array([1, 1, 1, 1]);
 		let v_len = tri.length/3;
 
@@ -71,37 +71,39 @@ class Planet{
 	}
 }
 
-function gen_planet(iso){
+function gen_terrain(iso){
 	noise.seed(Math.random());
 	let v_len = iso.length/3;
 
-	let h_range = .4;
-	let h_min = .8;
+	let h_range = .3;
+	let h_min = .85;
 	let h_exp = map(Math.random(), [0, 1], [.5, 3]);
 
-	let n_scl = [6, 4, 2, 1];
+	let n_scl = [3, 2, 1, .5];
 	let n_wgh = [
-		map(Math.random(), [0, 1], [.1, .5]),
-		map(Math.random(), [0, 1], [.2, .5]),
-		map(Math.random(), [0, 1], [.7, 1]),
+		map(Math.random(), [0, 1], [.1, .3]),
+		map(Math.random(), [0, 1], [.1, .3]),
+		map(Math.random(), [0, 1], [.8, 1]),
 		map(Math.random(), [0, 1], [.8, 1])
 	];
+	let n_mag = mag(n_wgh)
 
-	let w_scl = map(Math.random(), [0, 1], [.2, 1]);
-	let w_wgh = map(Math.random(), [0, 1], [.1, 5]);
+	let w_scl = map(Math.random(), [0, 1], [.05, .25]);
+	let w_wgh = map(Math.random(), [0, 1], [.1, 3]);
 
 
 	for(let i = 0; i < v_len; i++){
 		let h = 0;
 		let warp = [
-			w_wgh*noise.perlin3(w_scl*iso[i*3], w_scl*iso[i*3 + 1], w_scl*iso[i*3 + 2]),
-			w_wgh*noise.perlin3(w_scl*iso[i*3 + 2], w_scl*iso[i*3], w_scl*iso[i*3 + 1]),
-			w_wgh*noise.perlin3( w_scl*iso[i*3 + 1], w_scl*iso[i*3 + 2], w_scl*iso[i*3])
+			w_wgh*noise.simplex3(w_scl*iso[i*3], w_scl*iso[i*3 + 1], w_scl*iso[i*3 + 2]),
+			w_wgh*noise.simplex3(w_scl*iso[i*3 + 2], w_scl*iso[i*3], w_scl*iso[i*3 + 1]),
+			w_wgh*noise.simplex3( w_scl*iso[i*3 + 1], w_scl*iso[i*3 + 2], w_scl*iso[i*3])
 		];
 		for(let j = 0; j < n_scl.length; j++){
-			h += n_wgh[j]*noise.perlin3(n_scl[j]*iso[i*3] + warp[0], n_scl[j]*iso[i*3 + 1] + warp[1], n_scl[j]*iso[i*3 + 2] + warp[2]);
+			h += n_wgh[j]*noise.simplex3(n_scl[j]*iso[i*3] + warp[0], n_scl[j]*iso[i*3 + 1] + warp[1], n_scl[j]*iso[i*3 + 2] + warp[2]);
 		}
-		h = Math.pow(.5*(h/mag(n_wgh) + 1), h_exp)*h_range + h_min;
+		h = Math.max(Math.min(h/n_mag, 1.0), -1.0);
+		h = Math.pow(.5*(h + 1), h_exp)*h_range + h_min;
 		iso[i*3] *= h;
 		iso[i*3 + 1] *= h;
 		iso[i*3 + 2] *= h;
