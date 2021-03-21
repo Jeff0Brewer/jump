@@ -8,6 +8,8 @@ class Planet{
 		let color = new Float32Array([1, 1, 1, 1]);
 		let v_len = tri.length/3;
 
+		this.data = new Float32Array(v_len*10);
+		this.F = [new PlanetForcer(pos, mass, 1)];
 		this.C_pos = [
 			[this.r, 0, 0],
 			[-this.r, 0, 0],
@@ -16,9 +18,11 @@ class Planet{
 			[0, 0, this.r],
 			[0, 0, -this.r]
 		];
-		this.F = [new PlanetForcer(pos, mass, 1)];
-		this.C = [[], [], [], [], [], []];
-		this.data = new Float32Array(v_len*10);
+		this.C = [];
+		for(let i = 0; i < this.C_pos.length; i++){
+			this.C.push([]);
+		}
+		
 		for(let i = 0; i < v_len; i += 3){
 			let a = tri.slice(i*3, i*3 + 3);
 			let b = tri.slice((i+1)*3, (i+1)*3 + 3);
@@ -68,18 +72,39 @@ class Planet{
 }
 
 function gen_planet(iso){
+	noise.seed(Math.random());
 	let v_len = iso.length/3;
-	let scl = [6, 4, 2, 1];
-	let wgh = [.1, .2, .5, 1];
+
+	let h_range = .4;
+	let h_min = .8;
+	let h_exp = map(Math.random(), [0, 1], [.5, 3]);
+
+	let n_scl = [6, 4, 2, 1];
+	let n_wgh = [
+		map(Math.random(), [0, 1], [.1, .5]),
+		map(Math.random(), [0, 1], [.2, .5]),
+		map(Math.random(), [0, 1], [.7, 1]),
+		map(Math.random(), [0, 1], [.8, 1])
+	];
+
+	let w_scl = map(Math.random(), [0, 1], [.2, 1]);
+	let w_wgh = map(Math.random(), [0, 1], [.1, 5]);
+
+
 	for(let i = 0; i < v_len; i++){
-		let r = 0;
-		for(let j = 0; j < scl.length; j++){
-			r += noise.perlin3(scl[j]*iso[i*3], scl[j]*iso[i*3 + 1], scl[j]*iso[i*3 + 2]);
+		let h = 0;
+		let warp = [
+			w_wgh*noise.perlin3(w_scl*iso[i*3], w_scl*iso[i*3 + 1], w_scl*iso[i*3 + 2]),
+			w_wgh*noise.perlin3(w_scl*iso[i*3 + 2], w_scl*iso[i*3], w_scl*iso[i*3 + 1]),
+			w_wgh*noise.perlin3( w_scl*iso[i*3 + 1], w_scl*iso[i*3 + 2], w_scl*iso[i*3])
+		];
+		for(let j = 0; j < n_scl.length; j++){
+			h += n_wgh[j]*noise.perlin3(n_scl[j]*iso[i*3] + warp[0], n_scl[j]*iso[i*3 + 1] + warp[1], n_scl[j]*iso[i*3 + 2] + warp[2]);
 		}
-		r = (.5*(r/(scl.length*mag(wgh)) + 1))*.5 + .75;
-		iso[i*3] *= r;
-		iso[i*3 + 1] *= r;
-		iso[i*3 + 2] *= r;
+		h = Math.pow(.5*(h/mag(n_wgh) + 1), h_exp)*h_range + h_min;
+		iso[i*3] *= h;
+		iso[i*3 + 1] *= h;
+		iso[i*3 + 2] *= h;
 	}
 	return iso;
 }

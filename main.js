@@ -10,15 +10,13 @@ INPUT = {
 };
 
 function main(){
-	noise.seed(Math.random());
-
 	c = document.getElementById('canvas');
 	c.width = window.innerWidth*window.devicePixelRatio;
 	c.height = window.innerHeight*window.devicePixelRatio;
 	setup_gl(c);
 
 	planet = new Planet([0, 0, 0], 4*Math.pow(10, 16), 250)
-	player = new PlayerController([0, 0, 300], .01, 40, 2*Math.pow(10, 5), .025);
+	player = new PlayerController([0, 0, 300], .01, 60, 2*Math.pow(10, 5), .025);
 	let player_num = 1;
 	let player_bound = 30;
 	let player_sys = {
@@ -32,7 +30,7 @@ function main(){
 			let p = player.pos;
 			let v = [0, 0, 0];
 			let f = [0, 0, 0];
-			let m = 75;
+			let m = 90;
 			let s = 0;
 			let l = 0;
 			let c = [0, 0, 0, 1];
@@ -49,14 +47,14 @@ function main(){
 	}
 
 	drawers = [
-		new TriDrawer(1, planet.data, [0, 0, 1500, 0])
+		new TriDrawer(1, planet.data, [0, -250, 1500, 0])
 	];
 
 	model_matrix = mat4.create();
 	view_matrix = mat4.create();
 	proj_matrix = mat4.create();
 	mat4.perspective(proj_matrix, fovy, c.width/c.height, .01, 500000);
-	mat4.lookAt(view_matrix, [0, -300, 0], [0, 0, 0], [0, 0, 1]);
+	mat4.lookAt(view_matrix, [0, -500, 0], [0, 0, 0], [0, 0, 1]);
 	
 	u_ModelMatrix = [];
 	u_ViewMatrix = [];
@@ -103,7 +101,7 @@ function main(){
 
 	document.addEventListener('pointerlockchange', function(){
 		player.pointerlockchange(document.pointerLockElement == c);
-	})
+	});
 
 	c.onmousedown = function(e){
 		this.requestPointerLock();
