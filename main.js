@@ -47,13 +47,14 @@ function main(){
 	}
 
 	drawers = [
-		new TriDrawer(1, planet.data, [0, -250, 1500, 0])
+		new TriDrawer(1, planet.terrain_data, [0, -250, 1500, 0]),
+		new TriDrawer(1, planet.ocean_data, [0, -250, 1500, 0])
 	];
 
 	model_matrix = mat4.create();
 	view_matrix = mat4.create();
 	proj_matrix = mat4.create();
-	mat4.perspective(proj_matrix, fovy, c.width/c.height, .01, 500000);
+	mat4.perspective(proj_matrix, fovy, c.width/c.height, .1, 5000);
 	mat4.lookAt(view_matrix, [0, -500, 0], [0, 0, 0], [0, 0, 1]);
 	
 	u_ModelMatrix = [];
@@ -77,7 +78,7 @@ function main(){
 		if(!paused){
 			let player_pos = part_sys[PLAYER_SYS].s1.slice(0, 3);
 			part_sys[PLAYER_SYS].F[0].set_force(player.update(part_sys[PLAYER_SYS].s1, INPUT, vec3.normalize([0, 0, 0], player_pos)));
-			part_sys[PLAYER_SYS].C = planet.get_C(player_pos);
+			part_sys[PLAYER_SYS].C = planet.update(player.head);
 			for(let i = 0; i < part_sys.length; i++){
 				part_sys[i].applyAllForces(part_sys[i].s1, part_sys[i].F);
 				part_sys[i].solver(timestep);
@@ -175,7 +176,7 @@ document.body.onresize = function(){
 	c.height = window.innerHeight*window.devicePixelRatio;
 	if(gl){
 		gl.viewport(0, 0, c.width, c.height);
-		mat4.perspective(proj_matrix, fovy, c.width/c.height, .01, 500000);
+		mat4.perspective(proj_matrix, fovy, c.width/c.height, .1, 5000);
 		for(let i = 0; i < mvp_shaders.length; i++){
 			switch_shader(mvp_shaders[i]);
 			gl.uniformMatrix4fv(gl.getUniformLocation(gl.program, 'u_ProjMatrix'), false, proj_matrix);
