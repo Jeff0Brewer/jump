@@ -15,8 +15,8 @@ function main(){
 	c.height = window.innerHeight*window.devicePixelRatio;
 	setup_gl(c);
 
-	planet = new Planet([0, 0, 0], 4*Math.pow(10, 16), 250)
-	player = new PlayerController([0, 0, 300], .01, 60, 2*Math.pow(10, 5), .025);
+	planet = new Planet([0, 0, 0], 5*Math.pow(10, 16), 300);
+	player = new PlayerController([0, 0, 350], .01, 60, 2.5*Math.pow(10, 5), .025);
 	let player_num = 1;
 	let player_bound = 30;
 	let player_sys = {
@@ -55,7 +55,7 @@ function main(){
 	view_matrix = mat4.create();
 	proj_matrix = mat4.create();
 	mat4.perspective(proj_matrix, fovy, c.width/c.height, .1, 5000);
-	mat4.lookAt(view_matrix, [0, -500, 0], [0, 0, 0], [0, 0, 1]);
+	mat4.lookAt(view_matrix, [0, -600, 0], [0, 0, 0], [0, 0, 1]);
 	
 	u_ModelMatrix = [];
 	u_ViewMatrix = [];

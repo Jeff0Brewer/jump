@@ -4,6 +4,22 @@ class Planet{
 		this.r = radius
 		this.m = mass;
 
+		this.hgh_cmap = new ColorMap([
+			[0, 0, .1, 1],
+			[.2, .2, .25, 1],
+			[.3, .3, .3, 1],
+			[.4, .45, .35, 1],
+			[.6, .45, .3, 1],
+			[.5, .5, .5, 1],
+			[.6, .6, .6, 1]
+		]);
+
+		this.nrm_cmap = new ColorMap([
+			[1, 0, 1, 1],
+			[.3, .7, .3, 1],
+			[1, 1, 1, 1]
+		]);
+
 		let terrain_tri = gen_iso(5);
 		this.ocean_height = gen_terrain(terrain_tri)*this.r;
 		let terrain_len = terrain_tri.length/3;
@@ -34,10 +50,18 @@ class Planet{
 			let n = vec3.normalize([0,0,0], vec3.cross([0,0,0], vec3.subtract([0,0,0], b, a), vec3.subtract([0,0,0], c, a)));
 
 			for(let j = 0; j < 3; j++){
+				let x = terrain_tri[(i+j)*3];
+				let y = terrain_tri[(i+j)*3 + 1];
+				let z = terrain_tri[(i+j)*3 + 2];
+
+				let h_per = (vec3.length([x, y, z]) - .85)/.3;
+				color = this.hgh_cmap.map(h_per);
+				if(Math.acos(vec3.dot(vec3.normalize(vec3.create(), [x, y, z]), n)) < Math.PI/8)
+					color = this.nrm_cmap.map(h_per);
 				this.terrain_data.set([
-					this.r*terrain_tri[(i+j)*3],
-					this.r*terrain_tri[(i+j)*3 + 1],
-					this.r*terrain_tri[(i+j)*3 + 2],
+					this.r*x,
+					this.r*y,
+					this.r*z,
 					color[0],
 					color[1],
 					color[2],
@@ -111,6 +135,25 @@ class Planet{
 
 	get_C(pos){
 		
+	}
+}
+
+class ColorMap{
+	constructor(colors){
+		this.col = colors;
+	}
+
+	map(f){
+		f = Math.max(Math.min(f, .9999), 0);
+		let per = this.col.length*f;
+		let low = Math.floor(per);
+		let hgh = low + 1;
+		low = Math.max(low, 0);
+		hgh = Math.min(hgh, this.col.length - 1);
+		if(low == hgh)
+			return this.col[low];
+		per = (per - low);
+		return vec4.add(vec4.create(), vec4.scale(vec4.create(), this.col[low], 1 - per), vec4.scale(vec4.create(), this.col[hgh], per));
 	}
 }
 
